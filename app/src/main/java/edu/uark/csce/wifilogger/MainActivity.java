@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "aps.txt");
         Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
         for (ScanResult r : results) {
-            writer.write(r.SSID + "\n");
+            writer.write(r.SSID + " " + r.level + "\n");
         }
         writer.write("\n");
         writer.close();
