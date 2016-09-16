@@ -8,14 +8,19 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,10 +36,14 @@ public class MainActivity extends AppCompatActivity {
         this.registerReceiver(receiver, filter);
     }
 
-    public void writeScanResults(List<ScanResult> results) {
+    public void writeScanResults(List<ScanResult> results) throws IOException {
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "aps.txt");
+        Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
         for (ScanResult r : results) {
-            Log.d("SSID", r.SSID);
+            writer.write(r.SSID + "\n");
         }
+        writer.write("\n");
+        writer.close();
     }
 
     @Override
@@ -51,8 +60,13 @@ public class MainActivity extends AppCompatActivity {
             WifiManager conn = (WifiManager)
                     context.getSystemService(Context.WIFI_SERVICE);
             List<ScanResult> results = conn.getScanResults();
+            try {
+                writeScanResults(results);
+            }
 
-            writeScanResults(results);
+            catch(Exception e) {
+                Log.e("Error", e.getMessage());
+            }
         }
     }
 }
