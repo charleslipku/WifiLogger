@@ -22,10 +22,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private WifiReceiver receiver = new WifiReceiver();
+    private GregorianCalendar calendar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,12 +36,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         IntentFilter filter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         receiver = new WifiReceiver();
+        calendar = new GregorianCalendar();
         this.registerReceiver(receiver, filter);
     }
 
     public void writeScanResults(List<ScanResult> results) throws IOException {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "aps.txt");
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
+        Date date = calendar.getTime();
+        writer.write(Long.toString(date.getTime()));
+        writer.newLine();
         for (ScanResult r : results) {
             writer.write(r.SSID + " " + r.level);
             writer.newLine();
