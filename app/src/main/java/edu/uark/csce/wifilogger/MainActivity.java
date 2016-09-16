@@ -38,11 +38,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void writeScanResults(List<ScanResult> results) throws IOException {
         File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "aps.txt");
-        Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
         for (ScanResult r : results) {
-            writer.write(r.SSID + " " + r.level + "\n");
+            writer.write(r.SSID + " " + r.level);
+            writer.newLine();
         }
-        writer.write("\n");
+        writer.newLine();
         writer.close();
     }
 
