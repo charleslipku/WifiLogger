@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
@@ -59,15 +60,15 @@ public class MainActivity extends AppCompatActivity {
     public class WifiReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            WifiManager conn = (WifiManager)
-                    context.getSystemService(Context.WIFI_SERVICE);
-            List<ScanResult> results = conn.getScanResults();
-            try {
-                writeScanResults(results);
-            }
-
-            catch(Exception e) {
-                Log.e("Error", e.getMessage());
+            NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+            if (info.getDetailedState().equals(NetworkInfo.DetailedState.CONNECTED)) {
+                WifiManager conn = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                List<ScanResult> results = conn.getScanResults();
+                try {
+                    writeScanResults(results);
+                } catch (Exception e) {
+                    Log.e("Error", e.getMessage());
+                }
             }
         }
     }
