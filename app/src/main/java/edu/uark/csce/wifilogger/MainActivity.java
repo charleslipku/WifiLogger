@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
@@ -17,13 +16,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private WifiReceiver receiver = new WifiReceiver();
-    private GregorianCalendar calendar;
+    private final long MIN_MILLISECONDS_BETWEEN_UPDATES = 5000;
+    private long lastUpdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,22 +30,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         IntentFilter filter = new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         receiver = new WifiReceiver();
-        calendar = new GregorianCalendar();
+        lastUpdate = 0;
         this.registerReceiver(receiver, filter);
     }
 
     public void writeScanResults(List<ScanResult> results) throws IOException {
-        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "aps.txt");
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
-        Date date = calendar.getTime();
-        writer.write(Long.toString(date.getTime()));
-        writer.newLine();
-        for (ScanResult r : results) {
-            writer.write(r.SSID + " " + r.level);
+        Long time = new GregorianCalendar().getTime().getTime();
+        if (time - lastUpdate >= MIN_MILLISECONDS_BETWEEN_UPDATES) {
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "aps.txt");
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
+            lastUpdate = time;
+            writer.write(Long.toString(time));
             writer.newLine();
+            for (ScanResult r : results) {
+                writer.write(r.SSID + " " + r.level);
+                writer.newLine();
+            }
+            writer.newLine();
+            writer.close();
         }
-        writer.newLine();
-        writer.close();
     }
 
     @Override
@@ -60,15 +62,12 @@ public class MainActivity extends AppCompatActivity {
     public class WifiReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-            if (info.getDetailedState().equals(NetworkInfo.DetailedState.CONNECTED)) {
-                WifiManager conn = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-                List<ScanResult> results = conn.getScanResults();
-                try {
-                    writeScanResults(results);
-                } catch (Exception e) {
-                    Log.e("Error", e.getMessage());
-                }
+            WifiManager conn = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            List<ScanResult> results = conn.getScanResults();
+            try {
+                writeScanResults(results);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
             }
         }
     }
